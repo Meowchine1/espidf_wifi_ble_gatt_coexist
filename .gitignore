@@ -1,0 +1,10 @@
+# Build output
+build/
+managed_components/
+
+# IDE settings
+.settings/
+.project
+.cproject
+
+ 
