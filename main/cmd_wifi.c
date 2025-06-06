@@ -21,7 +21,8 @@
 #include "iperf.h"
 
 #include "wifi_conf.h"
-#include "my_http.h"
+//#include "my_http.h"
+#include "my_mqtt.h"
 typedef struct {
     struct arg_str *ip;
     struct arg_lit *server;
@@ -201,7 +202,6 @@ static int wifi_cmd_sta(int argc, char **argv)
     
     const char *ssid = (sta_args.ssid->count > 0) ? sta_args.ssid->sval[0] : DEFAULT_SSID;
     const char *password = (sta_args.password->count > 0) ? sta_args.password->sval[0] : DEFAULT_PASSWORD;
-
 
     ESP_LOGI(TAG, "sta connecting to '%s'", ssid);
     wifi_cmd_sta_join(ssid, password);
@@ -441,9 +441,28 @@ static int heap_size(int argc, char **argv)
 }
 
 // my code
-extern TaskHandle_t http_task_handle;
+//extern TaskHandle_t http_task_handle;
+extern TaskHandle_t mqtt_task_handle;
 extern bool send_wifi;
+
+int check_wifi_conn() {
+    wifi_ap_record_t ap_info;
+    esp_err_t err = esp_wifi_sta_get_ap_info(&ap_info);
+    if (err == ESP_OK) {
+        ESP_LOGI("WiFi", "Connected to SSID: %s", ap_info.ssid);
+        return 1;
+    } else {
+        ESP_LOGW("WiFi", "Not connected to any AP");
+        return 0;
+    }
+}
+
 int start_send_wifi_task(int argc, char **argv){
+	
+	if (!check_wifi_conn()){
+		return 1;
+	}
+	
 	ESP_LOGI(TAG, "start_send_wifi_task");
 	
 	int nerrors = arg_parse(argc, argv, (void **) &sta_args);
@@ -453,16 +472,26 @@ int start_send_wifi_task(int argc, char **argv){
         return 1;
     }
     
-    if (http_task_handle == NULL) {
+   /* if (http_task_handle == NULL) {
 	    send_wifi = true;
 	    xTaskCreate(&http_task, "http_task", 8192, NULL, 5, &http_task_handle);
+	    
+	} else {
+	    ESP_LOGI(TAG, "http_task already running");
+	}*/
+	
+	if (mqtt_task_handle == NULL) {
+	    send_wifi = true;
+	    xTaskCreate(&mqtt_task, "mqtt_task", 8192, NULL, 5, &mqtt_task_handle);
+	    
 	} else {
 	    ESP_LOGI(TAG, "http_task already running");
 	}
+	
+	 
    
 	return 0;
 }
-
 
 int stop_send_wifi_task (int argc, char **argv){
 	ESP_LOGI(TAG, "Stopping WiFi task");
@@ -470,6 +499,9 @@ int stop_send_wifi_task (int argc, char **argv){
 	return 0;
 }
 
+int is_wifi_connected(int argc, char **argv) {
+   return (int)check_wifi_conn();
+}
 
 void register_wifi(void)
 {
@@ -485,7 +517,7 @@ void register_wifi(void)
         .argtable = &sta_args
     };
     ESP_ERROR_CHECK( esp_console_cmd_register(&sta_cmd) );
-    
+
     // my code starts
     wifi_send_args.value = arg_str0(NULL, NULL, "<val>", "value to send");
     wifi_send_args.end = arg_end(2);
@@ -496,7 +528,7 @@ void register_wifi(void)
         .func = &start_send_wifi_task,
         .argtable = &wifi_send_args 
     };
-    ESP_ERROR_CHECK( esp_console_cmd_register(&wifi_cmd) );
+    ESP_ERROR_CHECK( esp_console_cmd_register(&wifi_cmd));
      
     const esp_console_cmd_t stop_wifi_cmd = {
         .command = "stop_send_wifi",
@@ -504,8 +536,15 @@ void register_wifi(void)
         .hint = NULL,
         .func = &stop_send_wifi_task
     };
-    ESP_ERROR_CHECK( esp_console_cmd_register(&stop_wifi_cmd) );
+    ESP_ERROR_CHECK( esp_console_cmd_register(&stop_wifi_cmd));
 
+    const esp_console_cmd_t is_wifi_connected_cmd = {
+        .command = "check_wifi",
+        .help = "is wifi connected",
+        .hint = NULL,
+        .func = &is_wifi_connected
+    };
+    ESP_ERROR_CHECK( esp_console_cmd_register(&is_wifi_connected_cmd));
     // my code ends
 
 

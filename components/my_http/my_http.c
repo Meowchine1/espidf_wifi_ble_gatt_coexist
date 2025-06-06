@@ -16,15 +16,15 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-#define MAX_HTTP_OUTPUT_BUFFER 2048
-static const char *TAG = "HTTP";
-TaskHandle_t http_task_handle = NULL;
-bool send_wifi = false;
+//#define MAX_HTTP_OUTPUT_BUFFER 2048
+//static const char *TAG = "HTTP";
+//TaskHandle_t http_task_handle = NULL;
+//bool send_wifi = false;
 // External sensor data
-int16_t dPressure = 36546, dSpeed = 3000, V = 56, L = 7, To = 40, Tm = 48;
+ //int16_t dPressure = 36546, dSpeed = 3000, V = 56, L = 7, To = 40, Tm = 48;
 //extern int16_t dPressure, dSpeed, V, L, To, Tm;
-uint8_t id = 17;
-esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
+//uint8_t id = 17;
+/*esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
     return ESP_OK; // Simplified for modularity
 }
 
@@ -65,8 +65,11 @@ void http_task(void *pvParameters) {
         vTaskDelay(pdMS_TO_TICKS(2000));
     }
     ESP_LOGI(TAG, "http_task exiting");
-    vTaskDelete(NULL); // удаляет саму себя
-}
+    http_task_handle = NULL;
+    vTaskDelete(NULL); 
+    
+    send_wifi = false;
+}*/
 
 
 

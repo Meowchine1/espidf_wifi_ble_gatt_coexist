@@ -788,6 +788,61 @@ static void wifi_console_init(void)
     ESP_ERROR_CHECK(esp_console_start_repl(repl));
 }
 
+//my code
+
+#define GATTS_SERVICE_UUID_TEST   0x00FF
+#define GATTS_CHAR_UUID_TEST      0xFF01
+#define GATTS_NUM_HANDLE_TEST     4
+
+#define DEVICE_NAME "PUMP"
+
+static uint16_t gatt_service_handle;
+static esp_gatt_if_t gatt_if;
+
+int16_t pressure = 36546, speed = 3000, v = 56, l = 7, to = 40, tm = 48;
+
+static void gatts_profile_event_handler(esp_gatts_cb_event_t event,
+                                        esp_gatt_if_t gatts_if_local,
+                                        esp_ble_gatts_cb_param_t *param) {
+    switch (event) {
+        case ESP_GATTS_READ_EVT:
+            ESP_LOGI(TAG, "Read request received");
+
+            // Обновим значение характеристики
+            char value[64];
+            snprintf(value, sizeof(value), "P:%d S:%d V:%d L:%d To:%d Tm:%d", pressure++, speed++, v++, l++, to++, tm++);
+
+            esp_gatt_rsp_t rsp = {0};
+            rsp.attr_value.handle = param->read.handle;
+            rsp.attr_value.len = strlen(value);
+            memcpy(rsp.attr_value.value, value, rsp.attr_value.len);
+            esp_ble_gatts_send_response(gatt_if, param->read.conn_id, param->read.trans_id,
+                                        ESP_GATT_OK, &rsp);
+            break;
+        default:
+            break;
+    }
+}
+
+void ble_gatts_init(void) {
+    esp_err_t ret;
+
+    esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
+
+    esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_bt_controller_init(&bt_cfg));
+    ESP_ERROR_CHECK(esp_bt_controller_enable(ESP_BT_MODE_BLE));
+    ESP_ERROR_CHECK(esp_bluedroid_init());
+    ESP_ERROR_CHECK(esp_bluedroid_enable());
+
+    ESP_ERROR_CHECK(esp_ble_gatts_register_callback(gatts_profile_event_handler));
+    ESP_ERROR_CHECK(esp_ble_gatts_app_register(0));
+    ESP_ERROR_CHECK(esp_ble_gap_set_device_name(DEVICE_NAME));
+}
+
+//
+
+
 void app_main(void)
 {
     esp_err_t err;
@@ -823,4 +878,7 @@ void app_main(void)
     }
 
     wifi_console_init();
+    
+    ble_gatts_init();
+	
 }
