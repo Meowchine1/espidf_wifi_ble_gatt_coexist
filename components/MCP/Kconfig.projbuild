@@ -1,0 +1,7 @@
+# motor_control_protocol/Kconfig
+
+config MOTOR_CONTROL_PROTOCOL
+    bool "Enable Motor Control Protocol"
+    default y
+    help
+        Enables the Motor Control Protocol component for motor control and monitoring.

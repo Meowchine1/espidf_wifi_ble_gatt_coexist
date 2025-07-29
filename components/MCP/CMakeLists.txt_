@@ -1,0 +1,11 @@
+# motor_control_protocol/CMakeLists.txt
+
+idf_component_register(
+    SRCS "motor_control_protocol.c"
+          "aspep.c"
+          "crc.c"
+          "transport_uart.c"
+          "uart_driver.c"
+    INCLUDE_DIRS "include"
+    REQUIRES driver
+)

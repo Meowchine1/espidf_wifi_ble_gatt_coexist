@@ -7,10 +7,10 @@
 
 #ifndef COMPONENTS_MY_MQTT_MY_MQTT_H_
 #define COMPONENTS_MY_MQTT_MY_MQTT_H_
-#pragma once
+#pragma once 
 
-void mqtt_task(void *pvParameters);
-
-
+ 
+#include "stdint.h"
+int mqtt_init(void);
 
 #endif /* COMPONENTS_MY_MQTT_MY_MQTT_H_ */
